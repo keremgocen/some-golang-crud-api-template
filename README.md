@@ -1,4 +1,6 @@
 # go-product-crud-api
+![example workflow](https://github.com/keremgocen/some-golang-crud-api-template/actions/workflows/golangci-lint.yaml/badge.svg)
+
 
 ### What this API is for?
 
