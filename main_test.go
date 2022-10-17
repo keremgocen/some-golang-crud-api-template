@@ -7,10 +7,25 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gorilla/mux"
 	"github.com/keregocen/go-product-crud-api/pkg/mockexchange"
 	"github.com/keregocen/go-product-crud-api/pkg/models"
+	"github.com/keregocen/go-product-crud-api/pkg/products"
+	"github.com/keregocen/go-product-crud-api/pkg/storage"
 	"github.com/stretchr/testify/assert"
 )
+
+func run() *mux.Router {
+	storageAPI := storage.NewStore()
+	currencyConverterAPI := mockexchange.NewConverter()
+	service := products.NewService(storageAPI, currencyConverterAPI)
+
+	r := mux.NewRouter()
+	r.Handle("/products", middleware(http.HandlerFunc(service.Create))).Methods(http.MethodPost)
+	r.Handle("/products", middleware(http.HandlerFunc(service.List))).Methods(http.MethodGet)
+	r.Handle("/product", middleware(http.HandlerFunc(service.Get))).Methods(http.MethodPost)
+	return r
+}
 
 func TestCreateProduct(t *testing.T) {
 	router := run()
