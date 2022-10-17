@@ -15,10 +15,12 @@ import (
 	"github.com/keregocen/go-product-crud-api/pkg/storage"
 )
 
-func main() {
-	ctxTimeoutSeconds := 5 * time.Second
-	ctxReadHeaderTimeoutSeconds := 3 * time.Second
+const (
+	ctxTimeout        = 5 * time.Second
+	readHeaderTimeout = 3 * time.Second
+)
 
+func main() {
 	storageAPI := storage.NewStore()
 	currencyConverterAPI := mockexchange.NewConverter()
 	service := products.NewService(storageAPI, currencyConverterAPI)
@@ -31,7 +33,7 @@ func main() {
 	httpServer := &http.Server{
 		Addr:              ":8080",
 		Handler:           r,
-		ReadHeaderTimeout: ctxReadHeaderTimeoutSeconds,
+		ReadHeaderTimeout: readHeaderTimeout,
 	}
 
 	signalChan := make(chan os.Signal, 1)
@@ -49,7 +51,7 @@ func main() {
 	case err := <-errChan:
 		log.Fatal(err)
 	case <-signalChan:
-		ctx, cancel := context.WithTimeout(context.Background(), ctxTimeoutSeconds)
+		ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 		defer cancel()
 		log.Println("Server shutdown initiated.")
 		if err := httpServer.Shutdown(ctx); err != nil {
