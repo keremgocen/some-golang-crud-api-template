@@ -15,9 +15,6 @@
 There is an optional, mock currency converter that is activated once the `GetProductRequest` has a
 `Currency` field set. The default value is assumed as "GBP".
 
-### Running tests locally
-
-
 ### Assumptions
 
 #### Mock Currency Converter
