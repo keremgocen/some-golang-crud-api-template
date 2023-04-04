@@ -9,31 +9,32 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/gorilla/mux"
-	"github.com/keregocen/go-product-crud-api/pkg/mockexchange"
-	"github.com/keregocen/go-product-crud-api/pkg/products"
+	"github.com/gin-gonic/gin"
+	"github.com/keregocen/go-product-crud-api/pkg/keyvalue"
 	"github.com/keregocen/go-product-crud-api/pkg/storage"
 )
 
 const (
-	ctxTimeout        = 5 * time.Second
-	readHeaderTimeout = 3 * time.Second
+	ctxTimeout    = 5 * time.Second
+	serverTimeout = 3 * time.Second
 )
 
 func main() {
 	storageAPI := storage.NewStore()
-	currencyConverterAPI := mockexchange.NewConverter()
-	service := products.NewService(storageAPI, currencyConverterAPI)
+	service := keyvalue.NewService(storageAPI)
 
-	r := mux.NewRouter()
-	r.Handle("/products", middleware(http.HandlerFunc(service.Create))).Methods(http.MethodPost)
-	r.Handle("/products", middleware(http.HandlerFunc(service.List))).Methods(http.MethodGet)
-	r.Handle("/product", middleware(http.HandlerFunc(service.Get))).Methods(http.MethodPost)
+	// Creates a gin router with default middleware:
+	// logger and recovery (crash-free) middleware
+	router := gin.Default()
+	router.GET("/keyvalue/:name", service.GetKeyValue)
+	router.POST("/keyvalue", service.PostKeyValue)
 
 	httpServer := &http.Server{
-		Addr:              ":8080",
-		Handler:           r,
-		ReadHeaderTimeout: readHeaderTimeout,
+		Addr:              ":5000",
+		Handler:           router,
+		ReadHeaderTimeout: serverTimeout,
+		WriteTimeout:      serverTimeout,
+		ReadTimeout:       serverTimeout,
 	}
 
 	signalChan := make(chan os.Signal, 1)
@@ -41,7 +42,7 @@ func main() {
 
 	errChan := make(chan error)
 	go func() {
-		log.Printf("Products service is starting.")
+		log.Printf("keyvalue service is starting")
 		if err := httpServer.ListenAndServe(); err != nil {
 			errChan <- err
 		}
@@ -53,16 +54,9 @@ func main() {
 	case <-signalChan:
 		ctx, cancel := context.WithTimeout(context.Background(), ctxTimeout)
 		defer cancel()
-		log.Println("Server shutdown initiated.")
+		log.Println("server shutdown initiated")
 		if err := httpServer.Shutdown(ctx); err != nil {
 			log.Println(err)
 		}
 	}
-}
-
-func middleware(h http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-type", "application/json")
-		h.ServeHTTP(w, r)
-	})
 }
