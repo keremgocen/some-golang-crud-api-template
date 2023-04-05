@@ -2,6 +2,7 @@ package keyvalue_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -26,18 +27,24 @@ func TestGetKeyvalue(t *testing.T) {
 			wantErr:     nil,
 			getEntryErr: nil,
 		},
-		// "get keyvalue returns 404 when when the key is missing": {
-		// 	name:        "missing",
-		// 	wantStatus:  http.StatusNotFound,
-		// 	wantErr:     nil,
-		// 	getEntryErr: gin.Error{Err: fmt.Errorf("not found")},
-		// },
+		"get keyvalue returns 404 when when the key is missing": {
+			name:        "missing",
+			wantStatus:  http.StatusNotFound,
+			wantErr:     nil,
+			getEntryErr: gin.Error{Err: fmt.Errorf("not found")},
+		},
+		"get keyvalue returns 400 when when the key is not ASCII alpha characters only": {
+			name:        "1233asd4567",
+			wantStatus:  http.StatusBadRequest,
+			wantErr:     nil,
+			getEntryErr: gin.Error{Err: fmt.Errorf("not found")},
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			storageAPI := storage.NewStore()
-			err := storageAPI.Save(tc.name, "bar")
+			err := storageAPI.Save("foo", "bar")
 			assert.Nil(t, err)
 
 			// ctrl := gomock.NewController(t)
@@ -56,7 +63,7 @@ func TestGetKeyvalue(t *testing.T) {
 			router.ServeHTTP(rr, req)
 			assert.Equal(t, tc.wantStatus, rr.Code)
 
-			var entry keyvalue.EntryResponse
+			var entry keyvalue.GetEntryResponse
 			err = json.Unmarshal(rr.Body.Bytes(), &entry)
 			assert.Nil(t, err)
 		})

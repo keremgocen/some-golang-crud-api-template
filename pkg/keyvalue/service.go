@@ -23,7 +23,7 @@ func NewService(storage Storage) *Service {
 
 // GetKeyValue returns a keyvalue pair from the storage.
 func (s *Service) GetKeyValue(c *gin.Context) {
-	var req EntryResponse
+	var req GetEntry
 	if err := c.ShouldBindUri(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "field validation failed" + err.Error()})
 		return
@@ -32,7 +32,7 @@ func (s *Service) GetKeyValue(c *gin.Context) {
 	key := req.Name
 
 	if cachedValue, ok := s.StorageAPI.Load(key); ok {
-		c.JSON(http.StatusOK, cachedValue)
+		c.JSON(http.StatusOK, GetEntryResponse{Value: cachedValue.(string)})
 		return
 	}
 
@@ -41,7 +41,7 @@ func (s *Service) GetKeyValue(c *gin.Context) {
 
 // PostKeyValue saves a keyvalue pair to the storage.
 func (s *Service) PostKeyValue(c *gin.Context) {
-	var req EntryRequest
+	var req PostEntry
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "field validation failed" + err.Error()})
 		return

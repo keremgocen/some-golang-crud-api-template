@@ -24,6 +24,7 @@ Given a value name, returns the value from storage if it exists.
 `/HTTP/POST /keyvalue`
 
 Example call (using curl):
+
 ```
 curl --header "Content-Type: application/json" \
   --request POST \
@@ -53,3 +54,13 @@ Business logic is implemented in keyvalue service via the handlers.
 #### API Input validation
 
 Input validation is done by Gin bindings which comes out of boxes, using the default settings.
+
+## Docker stuff
+
+### Building the docker image
+
+`-> docker build --tag keyvalue-service .`
+
+### Running and attaching to the docker image locally
+
+`-> docker run -p 5000:5000 --name test keyvalue-service`
